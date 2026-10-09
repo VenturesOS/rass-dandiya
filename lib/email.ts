@@ -23,10 +23,10 @@ export async function sendTicketEmail({
   }
 
   const resend = new Resend(apiKey);
-  // Custom verified domain address or default onboarding address
+  // Use verified domain address by default
   const fromEmail =
     process.env.RESEND_FROM_EMAIL ||
-    'Dandiya Night <onboarding@resend.dev>';
+    'Dandiya Night <tickets@rassdandiya.world>';
 
   const formattedDate = event.date
     ? new Date(event.date).toLocaleString('en-IN', {
