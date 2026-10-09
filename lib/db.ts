@@ -19,6 +19,7 @@ const INIT_SQL = [
   `CREATE TABLE IF NOT EXISTS tickets (
     token TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
+    email TEXT,
     contact TEXT NOT NULL,
     method TEXT NOT NULL,
     amount INTEGER NOT NULL,
@@ -39,6 +40,25 @@ export async function ensureSchema(c: Client) {
     for (const sql of INIT_SQL) {
       await c.execute(sql);
     }
+
+    // Try adding email column if table was created in an older schema
+    try {
+      await c.execute('ALTER TABLE tickets ADD COLUMN email TEXT');
+    } catch {
+      // column already exists
+    }
+
+    // Insert default event if table is empty
+    const ev = await c.execute('SELECT COUNT(*) as cnt FROM event WHERE id=1');
+    if (!(ev.rows[0] as any)?.cnt) {
+      await c.execute({
+        sql: `INSERT INTO event (id, name, date, venue, price, gate_key, gate_open)
+              VALUES (1, 'Dandiya Night 2026', '2026-10-24T18:30', 'Royal Celebration Grounds, Main Arena', 49900, ?, 1)
+              ON CONFLICT(id) DO NOTHING`,
+        args: [crypto.randomUUID()],
+      });
+    }
+
     initialized = true;
   } catch (err) {
     console.warn('Schema auto-init notice:', err);
@@ -58,7 +78,6 @@ export function getDb(): Client {
       authToken: process.env.TURSO_AUTH_TOKEN || process.env.LIBSQL_AUTH_TOKEN,
     });
 
-    // Auto-initialize tables in background
     ensureSchema(client).catch((e) => console.error('Failed to init schema:', e));
   }
   return client;
