@@ -386,7 +386,7 @@ export default function Dashboard() {
                   value={loginPass}
                   onChange={(e) => setLoginPass(e.target.value)}
                   required
-                  placeholder="Enter password (default: dandiya2026)"
+                  placeholder="Enter management password"
                 />
               </label>
               <button className="primary" disabled={busy}>
