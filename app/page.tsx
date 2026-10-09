@@ -31,6 +31,7 @@ export default function PublicHomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [confirmedTickets, setConfirmedTickets] = useState<any[] | null>(null);
+  const [emailNotice, setEmailNotice] = useState<string | null>(null);
 
   // Fetch event details
   useEffect(() => {
@@ -157,6 +158,11 @@ export default function PublicHomePage() {
       if (!res.ok) throw new Error(data.error || 'Ticket issuance failed.');
 
       setConfirmedTickets(data.tickets || []);
+      if (data.emailStatus?.ok === false) {
+        setEmailNotice(data.emailStatus.error || data.emailStatus.notice || 'Email dispatch notice');
+      } else {
+        setEmailNotice(null);
+      }
       setLoading(false);
     } catch (err: any) {
       setError(err.message || 'Verification failed.');
@@ -248,6 +254,24 @@ export default function PublicHomePage() {
               Your {confirmedTickets.length} Dandiya Night entry pass(es) have been generated.
               We've also dispatched your ticket(s) with QR codes to <strong>{email}</strong> via email.
             </p>
+
+            {emailNotice && (
+              <div
+                style={{
+                  background: '#fffbeb',
+                  border: '1px solid #fde68a',
+                  borderRadius: 10,
+                  padding: '12px 16px',
+                  margin: '14px auto',
+                  maxWidth: 520,
+                  color: '#92400e',
+                  fontSize: 13,
+                  textAlign: 'left',
+                }}
+              >
+                <strong>⚠️ Email Delivery Note:</strong> {emailNotice}
+              </div>
+            )}
 
             <div style={{ background: '#ffffff', borderRadius: 14, padding: 20, margin: '20px 0', border: '1px solid #d1fae5' }}>
               <h3 style={{ marginBottom: 12, fontSize: 18 }}>Your Digital Passes:</h3>

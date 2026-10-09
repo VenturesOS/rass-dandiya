@@ -17,15 +17,16 @@ export async function sendTicketEmail({
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.log(
-      `[Resend Notice] RESEND_API_KEY not configured. Simulated ticket email to ${to}: ${ticketUrl}`
-    );
-    return { ok: false, notice: 'RESEND_API_KEY not configured' };
+    const msg = `RESEND_API_KEY is not set in environment variables. Simulated email for ${to}`;
+    console.warn(msg);
+    return { ok: false, notice: msg };
   }
 
   const resend = new Resend(apiKey);
-  // Default to onboarding domain provided by Resend, or custom domain if configured
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Dandiya Night <onboarding@resend.dev>';
+  // Custom verified domain address or default onboarding address
+  const fromEmail =
+    process.env.RESEND_FROM_EMAIL ||
+    'Dandiya Night <onboarding@resend.dev>';
 
   const formattedDate = event.date
     ? new Date(event.date).toLocaleString('en-IN', {
@@ -94,15 +95,22 @@ export async function sendTicketEmail({
   `;
 
   try {
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: [to],
       subject: `🪔 Your Ticket for ${event.name} - ${name}`,
       html,
     });
-    return { ok: true, data };
-  } catch (error) {
-    console.error('Failed to send Resend email:', error);
-    return { ok: false, error };
+
+    if (error) {
+      console.error('Resend delivery rejected:', error);
+      return { ok: false, error: error.message };
+    }
+
+    console.log(`Resend ticket email delivered successfully to ${to}, Email ID: ${data?.id}`);
+    return { ok: true, id: data?.id };
+  } catch (err: any) {
+    console.error('Resend unexpected exception:', err);
+    return { ok: false, error: err.message || 'Email delivery exception' };
   }
 }

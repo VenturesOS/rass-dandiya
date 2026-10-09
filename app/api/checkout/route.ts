@@ -126,19 +126,25 @@ export async function POST(req: Request) {
           console.error('Failed to generate ticket QR data URL:', e);
         }
 
-        // Send email via Resend in the background
-        sendTicketEmail({
-          to: email,
-          name: guestName,
-          event: {
-            name: event.name,
-            date: event.date,
-            venue: event.venue,
-          },
-          ticketUrl,
-          qrDataUrl,
-          token,
-        }).catch((err) => console.error('Failed to dispatch ticket email:', err));
+        // Send email via Resend and await completion so serverless does not freeze before delivery
+        let emailStatus: any = null;
+        try {
+          emailStatus = await sendTicketEmail({
+            to: email,
+            name: guestName,
+            event: {
+              name: event.name,
+              date: event.date,
+              venue: event.venue,
+            },
+            ticketUrl,
+            qrDataUrl,
+            token,
+          });
+        } catch (err: any) {
+          console.error('Email send failed:', err);
+          emailStatus = { ok: false, error: err.message };
+        }
 
         createdTickets.push({ token, name: guestName, ticketUrl });
       }
@@ -148,6 +154,7 @@ export async function POST(req: Request) {
         message: `${quantity} ticket(s) issued successfully!`,
         tickets: createdTickets,
         primaryTicketUrl: createdTickets[0].ticketUrl,
+        emailStatus,
       });
     }
 
