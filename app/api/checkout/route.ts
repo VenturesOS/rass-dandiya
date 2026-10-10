@@ -90,6 +90,7 @@ export async function POST(req: Request) {
 
       const origin = new URL(req.url).origin;
       const createdTickets = [];
+      let emailStatus: any = null;
 
       for (let i = 0; i < quantity; i++) {
         const token = crypto.randomUUID();
@@ -127,7 +128,6 @@ export async function POST(req: Request) {
         }
 
         // Send email via Resend and await completion so serverless does not freeze before delivery
-        let emailStatus: any = null;
         try {
           emailStatus = await sendTicketEmail({
             to: email,

@@ -16,7 +16,7 @@ export async function admit(
     sql: 'SELECT gate_key, gate_open FROM event WHERE id=1',
     args: [],
   });
-  const event = eventRow.rows[0] as { gate_key: string; gate_open: number } | undefined;
+  const event = eventRow.rows[0] as unknown as { gate_key: string; gate_open: number } | undefined;
   if (!event?.gate_open) {
     throw new AppError('Entry is currently closed. Please ask the event manager to open gate admission.', 409);
   }
@@ -39,7 +39,7 @@ export async function admit(
     sql: 'SELECT token, name, cancelled, entered_at, receipt, checked_by FROM tickets WHERE token=?',
     args: [token],
   });
-  const ticket = ticketRow.rows[0] as
+  const ticket = ticketRow.rows[0] as unknown as
     | { token: string; name: string; cancelled: number; entered_at: string | null; receipt: string | null }
     | undefined;
 

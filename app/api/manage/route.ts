@@ -81,6 +81,11 @@ export async function POST(req: Request) {
         await db().execute({ sql: 'INSERT OR IGNORE INTO members(email) VALUES (?)', args: [email] });
         return json({ ok: true });
       }
+      case 'reset_passes': {
+        if (!u.isOwner) throw new AppError('Only the owner can reset passes.', 403);
+        await db().execute({ sql: 'DELETE FROM tickets', args: [] });
+        return json({ ok: true });
+      }
       default:
         throw new AppError('Unknown action.');
     }

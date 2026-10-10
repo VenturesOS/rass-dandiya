@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   XCircle,
   ExternalLink,
+  Trash2,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -123,6 +124,7 @@ export default function Dashboard() {
   const [requestId, setRequestId] = useState('');
   const [query, setQuery] = useState('');
   const [confirm, setConfirm] = useState<Guest | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [loginPass, setLoginPass] = useState('');
 
   // Scanner state
@@ -620,6 +622,15 @@ export default function Dashboard() {
                   <button className="primary" onClick={start}>
                     <Plus size={18} /> Issue In-Person Pass
                   </button>
+                  {tickets.length > 0 && (
+                    <button
+                      className="secondary"
+                      style={{ color: '#dc2626', borderColor: '#fca5a5' }}
+                      onClick={() => setConfirmReset(true)}
+                    >
+                      <Trash2 size={16} /> Zero Passes
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -933,6 +944,31 @@ export default function Dashboard() {
               }}
             >
               Cancel Pass
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Zero All Passes Confirmation */}
+      <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Zero / Reset All Passes?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently delete all {tickets.length} passes and reset your guest list, active tickets, and check-in count back to 0. This cannot be undone.
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Passes</AlertDialogCancel>
+            <AlertDialogAction
+              style={{ background: '#dc2626', color: '#ffffff' }}
+              onClick={() => {
+                void run(async () => {
+                  await call({ action: 'reset_passes' });
+                  setMessage('All passes have been reset to zero.');
+                  await refresh(true);
+                });
+              }}
+            >
+              Yes, Zero All Passes
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
